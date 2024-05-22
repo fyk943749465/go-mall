@@ -17,8 +17,24 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			{
 				Method:  http.MethodPost,
 				Path:    "/register",
-				Handler: handler.register,
+				Handler: handler.Register,
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/login",
+				Handler: handler.Login,
 			},
 		},
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method: http.MethodGet,
+				Path: "/user/get/:id",
+				Handler: handler.GetUser,
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret), // need jwt
 	)
 }

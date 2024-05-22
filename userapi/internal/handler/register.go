@@ -7,7 +7,7 @@ import (
 	"userapi/internal/types"
 )
 
-func (u *UserHandler) register(w http.ResponseWriter, r *http.Request) {
+func (u *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	var req types.Request
 	if err := httpx.ParseJsonBody(r, &req); err != nil {

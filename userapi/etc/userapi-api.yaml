@@ -6,3 +6,7 @@ UserRpc:
     Hosts:
       - 127.0.0.1:2379
     Key: user.rpc
+
+Auth:
+  AccessSecret: "sd1241129129129"
+  AccessExpire: 604800

@@ -7,3 +7,8 @@ Etcd:
 
 Mysql:
   Datasource: root:thinker@tcp(127.0.0.1:3306)/zero_mall?charset=utf8mb4&parseTime=True&loc=Asia%2FShanghai
+
+CacheRedis:
+  - Host: 127.0.0.1:6379
+    Pass: thinker
+    Type: node

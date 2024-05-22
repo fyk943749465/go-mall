@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"github.com/golang-jwt/jwt/v4"
 	"rpc-common/user"
 	"time"
 
@@ -41,4 +42,40 @@ func (l *UserLogic) Register(req *types.Request) (resp *types.Response, err erro
 		Message: "success",
 		Data:    userResponse,
 	}, nil
+}
+
+func (l *UserLogic) GetUser(t *types.IdRequest) (resp *types.Response, err error) {
+
+	userId := l.ctx.Value("userId")
+	logx.Infof("get token : %s \n", userId)
+
+	userResponse, err := l.svcCtx.UserRpc.GetUser(context.Background(), &user.IdRequest{
+		Id: t.Id,
+	})
+	if err != nil {
+		return nil, err
+	}
+	resp = &types.Response{
+		Message: "success",
+		Data:    userResponse,
+	}
+	return
+}
+
+func (l *UserLogic) getToken(secretKey string, iat, seconds int64, userId int) (string, error) {
+
+	claims := make(jwt.MapClaims)
+	claims["exp"] = iat + seconds
+	claims["iat"] = iat
+	claims["userId"] = userId
+	token := jwt.New(jwt.SigningMethodHS256)
+	token.Claims = claims
+	return token.SignedString([]byte(secretKey))
+}
+
+func (l *UserLogic) Login(t *types.LoginRequest) (string, error) {
+
+	userId := 100
+	auth := l.svcCtx.Config.Auth
+	return l.getToken(auth.AccessSecret, time.Now().Unix(), auth.AccessExpire, userId)
 }
