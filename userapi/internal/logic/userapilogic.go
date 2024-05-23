@@ -5,6 +5,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"rpc-common/user"
 	"time"
+	"userapi/internal/errorx"
 
 	"userapi/internal/svc"
 	"userapi/internal/types"
@@ -49,6 +50,10 @@ func (l *UserLogic) GetUser(t *types.IdRequest) (resp *types.Response, err error
 	userId := l.ctx.Value("userId")
 	logx.Infof("get token : %s \n", userId)
 
+	if t.Id == "1" {
+		return nil, errorx.ParamsError
+	}
+
 	userResponse, err := l.svcCtx.UserRpc.GetUser(context.Background(), &user.IdRequest{
 		Id: t.Id,
 	})
@@ -75,6 +80,7 @@ func (l *UserLogic) getToken(secretKey string, iat, seconds int64, userId int) (
 
 func (l *UserLogic) Login(t *types.LoginRequest) (string, error) {
 
+	logx.Info("login executing....")
 	userId := 100
 	auth := l.svcCtx.Config.Auth
 	return l.getToken(auth.AccessSecret, time.Now().Unix(), auth.AccessExpire, userId)
