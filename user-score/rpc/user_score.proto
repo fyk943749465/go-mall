@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package userscore;
+
+option go_package = "./score";
+
+message UserScoreRequest {
+  int64 userId = 1;
+  int32 score = 2;
+}
+
+message UserScoreResponse {
+  int64 userId = 1;
+  int32 score = 2;
+}
+
+service UserScore {
+  rpc saveScore(UserScoreRequest) returns(UserScoreResponse);
+  rpc saveScoreCallback(UserScoreRequest) returns(UserScoreResponse);
+}

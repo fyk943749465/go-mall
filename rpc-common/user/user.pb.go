@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.27.1
 // 	protoc        v3.14.0
-// source: user.proto
+// source: user_score.proto
 
 package user
 

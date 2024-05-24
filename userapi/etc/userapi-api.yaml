@@ -6,7 +6,22 @@ UserRpc:
     Hosts:
       - 127.0.0.1:2379
     Key: user.rpc
-
+UserScoreRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: score.rpc
 Auth:
   AccessSecret: "sd1241129129129"
   AccessExpire: 604800
+
+Prometheus:
+  Host: 192.168.10.20
+  Port: 9081
+  Path: /metrics
+
+Telemetry:
+  Name: user-api
+  Endpoint: http://localhost:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger

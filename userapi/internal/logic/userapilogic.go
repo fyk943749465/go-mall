@@ -2,8 +2,11 @@ package logic
 
 import (
 	"context"
+	"fmt"
 	"github.com/golang-jwt/jwt/v4"
+	"rpc-common/score"
 	"rpc-common/user"
+	"strconv"
 	"time"
 	"userapi/internal/errorx"
 
@@ -39,6 +42,13 @@ func (l *UserLogic) Register(req *types.Request) (resp *types.Response, err erro
 	if err != nil {
 		return nil, err
 	}
+
+	userId, _ := strconv.ParseInt(userResponse.Id, 10, 64)
+	userScore, err := l.svcCtx.UserScoreRpc.SaveScore(context.Background(), &score.UserScoreRequest{
+		UserId: userId,
+		Score:  10,
+	})
+	fmt.Sprintf("register add score %d \n", userScore.Score)
 	return &types.Response{
 		Message: "success",
 		Data:    userResponse,

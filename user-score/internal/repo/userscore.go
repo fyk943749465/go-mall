@@ -1,0 +1,10 @@
+package repo
+
+import (
+	"context"
+	"user-score/internal/model"
+)
+
+type UserScoreRepo interface {
+	SaveUserScore(ctx context.Context, score *model.UserScore) error
+}

@@ -4,5 +4,6 @@ use (
 	./order
 	./rpc-common
 	./user
+	./user-score
 	./userapi
 )
