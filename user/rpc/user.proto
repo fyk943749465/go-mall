@@ -9,7 +9,7 @@ message IdRequest {
 }
 
 message UserRequest {
-  string id = 1;
+  int64 id = 1;
   string name = 2;
   string gender = 3;
 }
@@ -23,4 +23,5 @@ message UserResponse {
 service User {
   rpc getUser(IdRequest) returns(UserResponse);
   rpc save(UserRequest) returns(UserResponse);
+  rpc saveCallback(UserRequest) returns(UserResponse);
 }

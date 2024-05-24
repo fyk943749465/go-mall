@@ -3,10 +3,10 @@ package logic
 import (
 	"context"
 	"fmt"
+	"github.com/dtm-labs/dtm/client/dtmgrpc"
 	"github.com/golang-jwt/jwt/v4"
 	"rpc-common/score"
 	"rpc-common/user"
-	"strconv"
 	"time"
 	"userapi/internal/errorx"
 
@@ -14,7 +14,11 @@ import (
 	"userapi/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
+
+	_ "github.com/dtm-labs/dtmdriver-gozero"
 )
+
+var dtmServer = "etcd://localhost:2379/dtmservice"
 
 type UserLogic struct {
 	logx.Logger
@@ -33,25 +37,61 @@ func NewUserLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserLogic {
 func (l *UserLogic) Register(req *types.Request) (resp *types.Response, err error) {
 	// todo: add your logic here and delete this line
 
-	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelFunc()
-	userResponse, err := l.svcCtx.UserRpc.Save(ctx, &user.UserRequest{
-		Name:   req.Name,
-		Gender: req.Gender,
-	})
+	//ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	//defer cancelFunc()
+	//userResponse, err := l.svcCtx.UserRpc.Save(ctx, &user.UserRequest{
+	//	Name:   req.Name,
+	//	Gender: req.Gender,
+	//})
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//userId, _ := strconv.ParseInt(userResponse.Id, 10, 64)
+	//userScore, err := l.svcCtx.UserScoreRpc.SaveScore(context.Background(), &score.UserScoreRequest{
+	//	UserId: userId,
+	//	Score:  10,
+	//})
+
+	gid := dtmgrpc.MustGenGid(dtmServer)
+	sagaGrpc := dtmgrpc.NewSagaGrpc(dtmServer, gid)
+	userServer, err := l.svcCtx.Config.UserRpc.BuildTarget()
 	if err != nil {
 		return nil, err
 	}
 
-	userId, _ := strconv.ParseInt(userResponse.Id, 10, 64)
-	userScore, err := l.svcCtx.UserScoreRpc.SaveScore(context.Background(), &score.UserScoreRequest{
-		UserId: userId,
+	userScoreServer, err := l.svcCtx.Config.UserScoreRpc.BuildTarget()
+	if err != nil {
+		return nil, err
+	}
+
+	userReq := &user.UserRequest{
+		Id:     req.Id,
+		Name:   req.Name,
+		Gender: req.Gender,
+	}
+	// call save method
+	sagaGrpc.Add(userServer+"/user.User/save", userServer+"/user.User/saveCallback", userReq)
+	// 这个地方，应该是传入一个User，因为远程调用拿不到返回值。暂且先写死，为了测试效果。
+	userScoreReq := &score.UserScoreRequest{
+		UserId: req.Id,
 		Score:  10,
-	})
-	fmt.Sprintf("register add score %d \n", userScore.Score)
+	}
+
+	// 这里出现问题，不能调用saveScoreCallback。这里调用，是逻辑补偿。显然，user 微服务的方法就不会被回滚了。
+	// sagaGrpc.Add(userScoreServer+"/userscore.UserScore/saveScore", userScoreServer+"/userscore.UserScore/saveScoreCallback", userScoreReq)
+	sagaGrpc.Add(userScoreServer+"/userscore.UserScore/saveScore", "", userScoreReq)
+	sagaGrpc.WaitResult = true
+	err = sagaGrpc.Submit()
+	if err != nil {
+		fmt.Println("---------------------------")
+		fmt.Println(err)
+		return nil, err
+	}
+	//fmt.Sprintf("register add score %d \n", userScore.Score)
 	return &types.Response{
 		Message: "success",
-		Data:    userResponse,
+		Data:    "",
 	}, nil
 }
 

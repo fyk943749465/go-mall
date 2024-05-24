@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"user-score/database"
 	"user-score/internal/model"
@@ -19,9 +20,9 @@ func NewUserScoreDao(conn *database.DBConn) *UserScoreDao {
 	}
 }
 
-func (d *UserScoreDao) SaveUserScore(ctx context.Context, score *model.UserScore) error {
+func (d *UserScoreDao) SaveUserScore(tx *sql.Tx, ctx context.Context, score *model.UserScore) error {
 	sql := fmt.Sprintf("insert into %s (user_id, score) values(?, ?)", score.TableName())
-	result, err := d.Conn.ExecCtx(ctx, sql, score.UserId, score.Score)
+	result, err := tx.ExecContext(ctx, sql, score.UserId, score.Score)
 	if err != nil {
 		return err
 	}

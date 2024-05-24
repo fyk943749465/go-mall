@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v3.14.0
-// source: user_score.proto
+// source: user.proto
 
 package user
 
@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	User_GetUser_FullMethodName = "/user.User/getUser"
-	User_Save_FullMethodName    = "/user.User/save"
+	User_GetUser_FullMethodName      = "/user.User/getUser"
+	User_Save_FullMethodName         = "/user.User/save"
+	User_SaveCallback_FullMethodName = "/user.User/saveCallback"
 )
 
 // UserClient is the client API for User service.
@@ -29,6 +30,7 @@ const (
 type UserClient interface {
 	GetUser(ctx context.Context, in *IdRequest, opts ...grpc.CallOption) (*UserResponse, error)
 	Save(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*UserResponse, error)
+	SaveCallback(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*UserResponse, error)
 }
 
 type userClient struct {
@@ -57,12 +59,22 @@ func (c *userClient) Save(ctx context.Context, in *UserRequest, opts ...grpc.Cal
 	return out, nil
 }
 
+func (c *userClient) SaveCallback(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*UserResponse, error) {
+	out := new(UserResponse)
+	err := c.cc.Invoke(ctx, User_SaveCallback_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServer is the server API for User service.
 // All implementations must embed UnimplementedUserServer
 // for forward compatibility
 type UserServer interface {
 	GetUser(context.Context, *IdRequest) (*UserResponse, error)
 	Save(context.Context, *UserRequest) (*UserResponse, error)
+	SaveCallback(context.Context, *UserRequest) (*UserResponse, error)
 	mustEmbedUnimplementedUserServer()
 }
 
@@ -75,6 +87,9 @@ func (UnimplementedUserServer) GetUser(context.Context, *IdRequest) (*UserRespon
 }
 func (UnimplementedUserServer) Save(context.Context, *UserRequest) (*UserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Save not implemented")
+}
+func (UnimplementedUserServer) SaveCallback(context.Context, *UserRequest) (*UserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SaveCallback not implemented")
 }
 func (UnimplementedUserServer) mustEmbedUnimplementedUserServer() {}
 
@@ -125,6 +140,24 @@ func _User_Save_Handler(srv interface{}, ctx context.Context, dec func(interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _User_SaveCallback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).SaveCallback(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: User_SaveCallback_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).SaveCallback(ctx, req.(*UserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // User_ServiceDesc is the grpc.ServiceDesc for User service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -140,7 +173,11 @@ var User_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "save",
 			Handler:    _User_Save_Handler,
 		},
+		{
+			MethodName: "saveCallback",
+			Handler:    _User_SaveCallback_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "user_score.proto",
+	Metadata: "user.proto",
 }

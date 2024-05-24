@@ -31,3 +31,8 @@ func (s *UserServer) Save(ctx context.Context, in *user.UserRequest) (*user.User
 	l := logic.NewUserLogic(ctx, s.svcCtx)
 	return l.SaveUser(in)
 }
+
+func (s *UserServer) SaveCallback(ctx context.Context, in *user.UserRequest) (*user.UserResponse, error) {
+	l := logic.NewUserLogic(ctx, s.svcCtx)
+	return l.SaveCallback(in)
+}

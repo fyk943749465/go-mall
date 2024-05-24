@@ -2,11 +2,17 @@ package logic
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
+	"github.com/dtm-labs/dtm/client/dtmgrpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"rpc-common/user"
 	"strconv"
 	"user/internal/model"
 	"user/internal/svc"
 
+	_ "github.com/dtm-labs/dtmdriver-gozero"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -44,17 +50,41 @@ func (l *UserLogic) GetUser(in *user.IdRequest) (*user.UserResponse, error) {
 
 func (l *UserLogic) SaveUser(in *user.UserRequest) (*user.UserResponse, error) {
 
+	barrier, err2 := dtmgrpc.BarrierFromGrpc(l.ctx)
+	if err2 != nil {
+		// internal error 代表重试
+		return nil, status.Error(codes.Internal, err2.Error())
+	}
+
 	data := &model.User{
+		Id:     in.GetId(),
 		Name:   in.Name,
 		Gender: in.Gender,
 	}
-	err := l.svcCtx.UserRepo.Save(context.Background(), data)
+
+	err := barrier.CallWithDB(l.svcCtx.Db, func(tx *sql.Tx) error {
+		err := l.svcCtx.UserRepo.Save(tx, context.Background(), data)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Aborted, err.Error())
 	}
+
 	return &user.UserResponse{
 		Id:     strconv.FormatInt(data.Id, 10),
 		Name:   data.Name,
 		Gender: data.Gender,
 	}, nil
+}
+
+func (l *UserLogic) SaveCallback(in *user.UserRequest) (*user.UserResponse, error) {
+
+	fmt.Println("-----------------------------------------")
+	fmt.Println("save user callback .............")
+	fmt.Println("------------------------------------------")
+	return &user.UserResponse{}, nil
 }

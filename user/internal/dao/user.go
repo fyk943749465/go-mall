@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"user/database"
@@ -32,9 +33,9 @@ func NewUserDao(conn *database.DBConn) *UserDao {
 	}
 }
 
-func (d *UserDao) Save(ctx context.Context, user *model.User) error {
-	sql := fmt.Sprintf("insert into %s (name, gender) values(?, ?)", user.TableName())
-	result, err := d.Conn.ExecCtx(ctx, sql, user.Name, user.Gender)
+func (d *UserDao) Save(tx *sql.Tx, ctx context.Context, user *model.User) error {
+	sql := fmt.Sprintf("insert into %s (id, name, gender) values(?, ?, ?)", user.TableName())
+	result, err := tx.ExecContext(ctx, sql, user.Id, user.Name, user.Gender)
 	if err != nil {
 		return err
 	}
